@@ -3,24 +3,31 @@
 #include <stdlib.h>
 
 
+CborStaticOutput::CborStaticOutput(unsigned char *buffer, unsigned int capacity) {
+	this->capacity = capacity;
+	this->buffer = buffer;
+	this->offset = 0;
+    this->releaseBuffer = false;
+}
 
-
-
-CborStaticOutput::CborStaticOutput(const unsigned int capacity) {
+CborStaticOutput::CborStaticOutput(unsigned int capacity) {
 	this->capacity = capacity;
 	this->buffer = new unsigned char[capacity];
 	this->offset = 0;
+    this->releaseBuffer = true;
 }
 
 CborStaticOutput::~CborStaticOutput() {
-	delete buffer;
+    if (releaseBuffer) {
+        delete[] buffer;
+    }
 }
 
 void CborStaticOutput::putByte(unsigned char value) {
 	if(offset < capacity) {
 		buffer[offset++] = value;
 	} else {
-		Serial.print("buffer overflow error");
+        // err
 	}
 }
 
@@ -29,7 +36,7 @@ void CborStaticOutput::putBytes(const unsigned char *data, const unsigned int si
 		memcpy(buffer + offset, data, size);
 		offset += size;
 	} else {
-		Serial.print("buffer overflow error");
+        // err
 	}
 }
 
@@ -58,7 +65,7 @@ CborDynamicOutput::CborDynamicOutput(const uint32_t initalCapacity) {
 }
 
 CborDynamicOutput::~CborDynamicOutput() {
-	delete buffer;
+	delete[] buffer;
 }
 
 void CborDynamicOutput::init(unsigned int initalCapacity) {
@@ -203,4 +210,24 @@ void CborWriter::writeTag(const uint32_t tag) {
 
 void CborWriter::writeSpecial(const uint32_t special) {
 	writeTypeAndValue(7, special);
+}
+
+void CborWriter::writeFloat(float value) {
+    const int size = sizeof(value);
+    auto *arr = static_cast<unsigned char*>(static_cast<void*>(&value));
+    unsigned char tagMap[] = { 0, 0, 0xF9, 0, 0xFA, 0, 0, 0, 0xFB };
+    output->putByte(tagMap[size]);
+    for (int i = size - 1; i >= 0; --i) {
+        output->putByte(arr[i]);
+    }
+}
+
+void CborWriter::writeDouble(double value) {
+    const int size = sizeof(value);
+    auto *arr = static_cast<unsigned char*>(static_cast<void*>(&value));
+    unsigned char tagMap[] = { 0, 0, 0xF9, 0, 0xFA, 0, 0, 0, 0xFB };
+    output->putByte(tagMap[size]);
+    for (int i = size - 1; i >= 0; --i) {
+        output->putByte(arr[i]);
+    }
 }

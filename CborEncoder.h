@@ -32,6 +32,7 @@ public:
 
 class CborStaticOutput : public CborOutput {
 public:
+    CborStaticOutput(unsigned char *buffer, unsigned int capacity);
 	CborStaticOutput(unsigned int capacity);
 	~CborStaticOutput();
 	virtual unsigned char *getData();
@@ -42,6 +43,7 @@ private:
 	unsigned char *buffer;
 	unsigned int capacity;
 	unsigned int offset;
+    bool releaseBuffer;
 };
 
 
@@ -80,6 +82,8 @@ public:
 	void writeMap(const unsigned int size);
 	void writeTag(const uint32_t tag);
 	void writeSpecial(const uint32_t special);
+    void writeFloat(float value);
+    void writeDouble(double value);
 private:
 	void writeTypeAndValue(uint8_t majorType, const uint32_t value);
 	void writeTypeAndValue(uint8_t majorType, const uint64_t value);
